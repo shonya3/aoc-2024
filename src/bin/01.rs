@@ -1,14 +1,14 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, num::ParseIntError};
 
 fn main() {
     let s = std::fs::read_to_string("./files/01/lists.txt").unwrap();
-    let (l1, l2) = read_lists_input(&s);
+    let (l1, l2) = read_input(&s).unwrap();
 
     println!("PART 1. Distance of two lists is: {}", distance(&l1, &l2));
     println!(
         "PART 2. Similarity score of two lists is: {}",
         similarity_score(&l1, &l2)
-    )
+    );
 }
 
 pub fn distance(list_1: &[u32], list_2: &[u32]) -> u32 {
@@ -33,6 +33,12 @@ pub fn similarity_score(list_1: &[u32], list_2: &[u32]) -> u32 {
         .sum()
 }
 
+#[derive(Debug)]
+pub enum ReadInputError {
+    SplitLine(String),
+    ParseU32(ParseIntError, String),
+}
+
 /// Collect two lists into to vecs. Lists example:
 /// 3   4
 /// 4   3
@@ -40,21 +46,28 @@ pub fn similarity_score(list_1: &[u32], list_2: &[u32]) -> u32 {
 /// 1   3
 /// 3   9
 /// 3   3
-///
-pub fn read_lists_input(input: &str) -> (Vec<u32>, Vec<u32>) {
-    let mut list_1 = Vec::new();
-    let mut list_2 = Vec::new();
+pub fn read_input(input: &str) -> Result<(Vec<u32>, Vec<u32>), ReadInputError> {
+    input
+        .lines()
+        .map(|s| {
+            let mut split = s.split("   ");
+            let a = split
+                .next()
+                .ok_or_else(|| ReadInputError::SplitLine(s.to_owned()))?;
+            let a = a
+                .parse::<u32>()
+                .map_err(|err| ReadInputError::ParseU32(err, a.to_owned()))?;
 
-    for s in input.lines() {
-        let mut split = s.split("   ");
-        let a: u32 = split.next().unwrap().trim().parse().unwrap();
-        let b: u32 = split.next().unwrap().trim().parse().unwrap();
+            let b = split
+                .next()
+                .ok_or_else(|| ReadInputError::SplitLine(s.to_owned()))?;
+            let b = b
+                .parse::<u32>()
+                .map_err(|err| ReadInputError::ParseU32(err, b.to_owned()))?;
 
-        list_1.push(a);
-        list_2.push(b);
-    }
-
-    (list_1, list_2)
+            Ok((a, b))
+        })
+        .collect()
 }
 
 #[cfg(test)]
@@ -75,9 +88,10 @@ mod tests {
     }
 
     #[test]
-    fn read_lists_input() {
+    fn read_input() {
+        let res = super::read_input("3   4\n4   3\n2   5\n1   3\n3   9\n3   3");
         assert_eq!(
-            super::read_lists_input("3   4\n4   3\n2   5\n1   3\n3   9\n3   3"),
+            res.unwrap(),
             (vec![3, 4, 2, 1, 3, 3], vec![4, 3, 5, 3, 9, 3])
         );
     }
