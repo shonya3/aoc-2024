@@ -36,7 +36,7 @@ pub fn count_xmas(board: &Board<Letter>) -> u32 {
 }
 
 pub fn count_xmas_crosses(board: &Board<Letter>) -> u32 {
-    let check_cross = |letter: &Letter, stepper: &mut Stepper<Letter>| -> bool {
+    let check_cross = |letter: &Letter, stepper: &Stepper<Letter>| -> bool {
         if *letter == Letter::X || *letter == Letter::A {
             return false;
         }
@@ -69,9 +69,9 @@ pub fn count_xmas_crosses(board: &Board<Letter>) -> u32 {
     let mut n = 0;
     for (i, row) in board.0.iter().enumerate() {
         for (j, letter) in row.iter().enumerate() {
-            let mut stepper = Stepper { i, j, board };
+            let stepper = Stepper { i, j, board };
 
-            if check_cross(letter, &mut stepper) {
+            if check_cross(letter, &stepper) {
                 n += 1;
             };
         }
