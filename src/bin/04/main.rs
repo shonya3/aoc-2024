@@ -98,55 +98,46 @@ impl<T: Copy> Stepper<'_, T> {
     where
         T: Copy,
     {
-        let m = self.board;
-        let i = &mut self.i;
-        let j = &mut self.j;
+        let (next_i, next_j) = next_i_j(self.i, self.j, direction)?;
 
-        match direction {
-            Direction::Left => {
-                if *j == 0 {
-                    return None;
-                }
-                *j -= 1
-            }
-            Direction::Up => {
-                if *i == 0 {
-                    return None;
-                }
-                *i -= 1
-            }
-            Direction::Right => *j += 1,
-            Direction::Down => *i += 1,
-            Direction::UpLeft => {
-                if *i == 0 || *j == 0 {
-                    return None;
-                }
+        self.i = next_i;
+        self.j = next_j;
 
-                *i -= 1;
-                *j -= 1;
-            }
-            Direction::UpRight => {
-                if *i == 0 {
-                    return None;
-                }
-                *i -= 1;
-                *j += 1;
-            }
-            Direction::DownLeft => {
-                if *j == 0 {
-                    return None;
-                }
+        self.board
+            .get(next_i)
+            .and_then(|row| row.get(next_j))
+            .copied()
+    }
+}
 
-                *i += 1;
-                *j -= 1;
+pub fn next_i_j(i: usize, j: usize, direction: Direction) -> Option<(usize, usize)> {
+    match direction {
+        Direction::Left => match j == 0 {
+            true => None,
+            false => Some((i, j - 1)),
+        },
+        Direction::Up => match i == 0 {
+            true => None,
+            false => Some((i - 1, j)),
+        },
+        Direction::Right => Some((i, j + 1)),
+        Direction::Down => Some((i + 1, j)),
+        Direction::UpLeft => {
+            if i == 0 || j == 0 {
+                None
+            } else {
+                Some((i - 1, j - 1))
             }
-            Direction::DownRight => {
-                *i += 1;
-                *j += 1;
-            }
-        };
-
-        m.get(*i).and_then(|r| r.get(*j)).copied()
+        }
+        Direction::UpRight => match i == 0 {
+            true => None,
+            false => Some((i - 1, j + 1)),
+        },
+        Direction::DownLeft => match j == 0 {
+            true => None,
+            false => Some((i + 1, j - 1)),
+        },
+        Direction::DownRight => Some((i + 1, j + 1)),
     }
 }
 
