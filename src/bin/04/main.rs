@@ -5,6 +5,79 @@ fn main() {
 
     let board = Board(parse_input(&std::fs::read_to_string("./files/04.txt").unwrap()).unwrap());
     println!("Part 1. {}", count_xmas(&board));
+    println!("Part 2. {}", count_xmas_crosses(&board));
+}
+
+pub fn count_xmas(board: &Board<Letter>) -> u32 {
+    let mut n = 0;
+    let directions = Direction::directions();
+
+    for (i, row) in board.0.iter().enumerate() {
+        for (j, letter) in row.iter().enumerate() {
+            if *letter != Letter::X {
+                continue;
+            }
+
+            for direction in directions {
+                let mut stepper = Stepper { i, j, board };
+
+                if let Some(Letter::M) = stepper.step(direction) {
+                    if let Some(Letter::A) = stepper.step(direction) {
+                        if let Some(Letter::S) = stepper.step(direction) {
+                            n += 1;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    n
+}
+
+pub fn count_xmas_crosses(board: &Board<Letter>) -> u32 {
+    let check_cross = |letter: &Letter, stepper: &mut Stepper<Letter>| -> bool {
+        if *letter == Letter::X || *letter == Letter::A {
+            return false;
+        }
+
+        let Some(Cross {
+            top_l,
+            top_r,
+            bot_l,
+            bot_r,
+            mid,
+        }) = stepper.cross()
+        else {
+            return false;
+        };
+
+        if mid != Letter::A {
+            return false;
+        }
+
+        use Letter::{M, S};
+
+        let v1 = top_l == bot_l && top_l == M && top_r == bot_r && top_r == S;
+        let v2 = top_l == bot_l && top_l == S && top_r == bot_r && top_r == M;
+        let v3 = top_l == top_r && top_l == S && bot_l == bot_r && bot_r == M;
+        let v4 = top_l == top_r && top_l == M && bot_l == bot_r && bot_r == S;
+
+        v1 || v2 || v3 || v4
+    };
+
+    let mut n = 0;
+    for (i, row) in board.0.iter().enumerate() {
+        for (j, letter) in row.iter().enumerate() {
+            let mut stepper = Stepper { i, j, board };
+
+            if check_cross(letter, &mut stepper) {
+                n += 1;
+            };
+        }
+    }
+
+    n
 }
 
 #[derive(Debug, PartialEq, Clone, Copy)]
@@ -61,33 +134,6 @@ impl<T: Copy> Board<T> {
     }
 }
 
-pub fn count_xmas(board: &Board<Letter>) -> u32 {
-    let mut n = 0;
-    let directions = Direction::directions();
-
-    for (i, row) in board.0.iter().enumerate() {
-        for (j, letter) in row.iter().enumerate() {
-            if *letter != Letter::X {
-                continue;
-            }
-
-            for direction in directions {
-                let mut stepper = Stepper { i, j, board };
-
-                if let Some(Letter::M) = stepper.step(direction) {
-                    if let Some(Letter::A) = stepper.step(direction) {
-                        if let Some(Letter::S) = stepper.step(direction) {
-                            n += 1;
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    n
-}
-
 #[derive(Debug, Clone)]
 pub struct Stepper<'board, T> {
     pub i: usize,
@@ -107,6 +153,27 @@ impl<T: Copy> Stepper<'_, T> {
 
         self.board.get(next_i, next_j)
     }
+
+    pub fn cross(&self) -> Option<Cross<T>> {
+        let i = self.i;
+        let j = self.j;
+        Some(Cross {
+            top_l: self.board.get(i, j)?,
+            top_r: self.board.get(i, j + 2)?,
+            bot_l: self.board.get(i + 2, j)?,
+            bot_r: self.board.get(i + 2, j + 2)?,
+            mid: self.board.get(i + 1, j + 1)?,
+        })
+    }
+}
+
+/// 3x3 "X"
+pub struct Cross<T> {
+    top_l: T,
+    top_r: T,
+    bot_l: T,
+    bot_r: T,
+    mid: T,
 }
 
 pub fn next_i_j(i: usize, j: usize, direction: Direction) -> Option<(usize, usize)> {
@@ -170,6 +237,24 @@ impl Direction {
 #[cfg(test)]
 mod tests {
     use crate::{Board, Direction, Letter, Stepper};
+
+    #[test]
+    fn count_xmas_crosses() {
+        let input = r#"MMMSXXMASM
+MSAMXMSMSA
+AMXSXMAAMM
+MSAMASMSMX
+XMASAMXAMM
+XXAMMXXAMA
+SMSMSASXSS
+SAXAMASAAA
+MAMMMXMMMM
+MXMXAXMASX"#;
+
+        let board = Board(super::parse_input(input).unwrap());
+
+        assert_eq!(9, super::count_xmas_crosses(&board));
+    }
 
     #[test]
     fn count_xmas() {
