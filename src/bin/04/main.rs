@@ -53,9 +53,15 @@ pub fn parse_input(input: &str) -> Result<Vec<Vec<Letter>>, IncorrectLetterError
 }
 
 #[derive(Debug)]
-pub struct Board(pub Vec<Vec<Letter>>);
+pub struct Board<T>(pub Vec<Vec<T>>);
 
-pub fn count_xmas(board: &Board) -> u32 {
+impl<T: Copy> Board<T> {
+    pub fn get(&self, i: usize, j: usize) -> Option<T> {
+        self.0.get(i).and_then(|row| row.get(j)).copied()
+    }
+}
+
+pub fn count_xmas(board: &Board<Letter>) -> u32 {
     let mut n = 0;
     let directions = Direction::directions();
 
@@ -66,11 +72,7 @@ pub fn count_xmas(board: &Board) -> u32 {
             }
 
             for direction in directions {
-                let mut stepper = Stepper {
-                    i,
-                    j,
-                    board: &board.0,
-                };
+                let mut stepper = Stepper { i, j, board };
 
                 if let Some(Letter::M) = stepper.step(direction) {
                     if let Some(Letter::A) = stepper.step(direction) {
@@ -90,7 +92,7 @@ pub fn count_xmas(board: &Board) -> u32 {
 pub struct Stepper<'board, T> {
     pub i: usize,
     pub j: usize,
-    pub board: &'board [Vec<T>],
+    pub board: &'board Board<T>,
 }
 
 impl<T: Copy> Stepper<'_, T> {
@@ -103,10 +105,7 @@ impl<T: Copy> Stepper<'_, T> {
         self.i = next_i;
         self.j = next_j;
 
-        self.board
-            .get(next_i)
-            .and_then(|row| row.get(next_j))
-            .copied()
+        self.board.get(next_i, next_j)
     }
 }
 
@@ -193,12 +192,12 @@ MXMXAXMASX"#;
     #[test]
     fn stepper() {
         let input = "MMMSXXMASM\nMSAMXMSMSA";
-        let m = super::parse_input(input).unwrap();
+        let board = Board(super::parse_input(input).unwrap());
 
         let mut stepper = Stepper {
             i: 1,
             j: 0,
-            board: &m,
+            board: &board,
         };
 
         assert_eq!(stepper.step(Direction::Right), Some(Letter::S));
