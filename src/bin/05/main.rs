@@ -30,10 +30,9 @@ pub fn part1(data: &Data) -> u32 {
     data.updates
         .iter()
         .map(|update| {
-            let is_correct = is_update_correct(update, &data.rules);
-            if !is_correct {
+            if !is_update_correct(update, &data.rules) {
                 return 0;
-            };
+            }
 
             find_middle(&update.0).unwrap_or_default()
         })
