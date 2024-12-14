@@ -5,25 +5,8 @@ fn main() {
 
     println!("Day 5");
 
-    println!("Part 1: {}", part1(&data))
-}
-
-#[derive(Debug, Clone, Copy)]
-pub struct Rule(pub u32, pub u32);
-
-#[derive(Debug, Clone)]
-pub struct Update(pub Vec<u32>);
-
-#[derive(Debug, Default)]
-pub struct Data {
-    pub rules: Vec<Rule>,
-    pub updates: Vec<Update>,
-}
-
-#[derive(Debug)]
-pub enum ParseDataError {
-    Rule(ParseIntError, String),
-    Update(ParseIntError, String),
+    println!("Part 1: {}", part1(&data));
+    println!("Part 2: {}", part2::main(&data));
 }
 
 pub fn part1(data: &Data) -> u32 {
@@ -37,6 +20,85 @@ pub fn part1(data: &Data) -> u32 {
             find_middle(&update.0).unwrap_or_default()
         })
         .sum()
+}
+
+mod part2 {
+    use crate::{find_middle, is_update_correct, Data, Rule, Update};
+    use std::cmp::Ordering;
+
+    pub fn main(data: &Data) -> u32 {
+        data.updates
+            .iter()
+            .filter(|update| !is_update_correct(update, &data.rules))
+            .map(|update| {
+                let fixed = fix_update(update, &data.rules);
+                find_middle(&fixed.0).unwrap_or_default()
+            })
+            .sum()
+    }
+
+    fn fix_update(update: &Update, rules: &[Rule]) -> Update {
+        let mut vec = update.0.clone();
+
+        vec.sort_by(|a, b| {
+            let Some(rule) = rules
+                .iter()
+                .find(|rule| (*a == rule.0 || *a == rule.1) && (*b == rule.0 || *b == rule.1))
+            else {
+                return Ordering::Greater;
+            };
+
+            match *a == rule.0 {
+                true => Ordering::Less,
+                false => Ordering::Greater,
+            }
+        });
+
+        Update(vec)
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use crate::Update;
+
+        #[test]
+        fn fix_update() {
+            let data = crate::read_input(crate::INPUT_EXAMPLE).unwrap();
+
+            assert_eq!(
+                Update(vec![75, 47, 61, 53, 29]),
+                super::fix_update(&Update(vec![75, 47, 61, 53, 29]), &data.rules)
+            );
+
+            assert_eq!(
+                Update(vec![61, 29, 13]),
+                super::fix_update(&Update(vec![61, 13, 29]), &data.rules)
+            );
+
+            assert_eq!(
+                Update(vec![97, 75, 47, 29, 13]),
+                super::fix_update(&Update(vec![97, 13, 75, 29, 47]), &data.rules)
+            );
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct Rule(pub u32, pub u32);
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Update(pub Vec<u32>);
+
+#[derive(Debug, Default)]
+pub struct Data {
+    pub rules: Vec<Rule>,
+    pub updates: Vec<Update>,
+}
+
+#[derive(Debug)]
+pub enum ParseDataError {
+    Rule(ParseIntError, String),
+    Update(ParseIntError, String),
 }
 
 pub fn is_update_correct(update: &Update, rules: &[Rule]) -> bool {
@@ -101,9 +163,7 @@ pub fn read_input(s: &str) -> Result<Data, ParseDataError> {
     Ok(data)
 }
 
-#[cfg(test)]
-mod tests {
-    const INPUT_EXAMPLE: &str = r#"47|53
+pub const INPUT_EXAMPLE: &str = r#"47|53
 97|13
 97|61
 97|47
@@ -131,6 +191,10 @@ mod tests {
 75,97,47,61,53
 61,13,29
 97,13,75,29,47"#;
+
+#[cfg(test)]
+mod tests {
+    use crate::INPUT_EXAMPLE;
 
     #[test]
     fn read_input() {
