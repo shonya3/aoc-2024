@@ -1,5 +1,4 @@
 use crate::map::{Element, Map};
-use std::str::FromStr;
 
 #[derive(Debug)]
 pub struct Guard<'map> {
@@ -14,6 +13,7 @@ pub enum Position {
     OutOfMap,
 }
 
+#[allow(unused)]
 #[derive(Debug)]
 pub enum StepError {
     UnexpectedAnotherGuard(usize, usize),
@@ -44,7 +44,7 @@ impl Guard<'_> {
                     Element::Obstacle => {
                         self.direction = self.direction.rotate_90deg();
                     }
-                    Element::Guard(guard_element) => {
+                    Element::Guard(_) => {
                         return Err(StepError::UnexpectedAnotherGuard(next_i, next_j))
                     }
                 }

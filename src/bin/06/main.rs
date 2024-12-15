@@ -1,7 +1,5 @@
-#![allow(unused)]
-
 use guard::{Guard, Position};
-use map::{Element, GuardElement, Map};
+use map::{Element, Map};
 
 mod guard;
 mod map;
@@ -43,8 +41,7 @@ pub fn part1(map_input: &str) -> usize {
 
     map.0
         .iter()
-        .enumerate()
-        .flat_map(|(i, row)| row.iter().enumerate().map(move |(j, element)| element))
+        .flat_map(|row| row.iter())
         .filter(|element| **element == Element::Visited)
         .collect::<Vec<_>>()
         .len()

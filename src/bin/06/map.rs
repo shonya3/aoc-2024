@@ -1,10 +1,11 @@
-use std::{f32::consts::E, fmt::Write, path::Display, str::FromStr};
+use std::{fmt::Write, str::FromStr};
 
 use crate::guard::Direction;
 
 #[derive(Debug)]
 pub struct Map(pub Vec<Vec<Element>>);
 
+#[allow(unused)]
 #[derive(Debug)]
 pub struct ParseMapError(pub ParseElementError);
 
@@ -42,10 +43,10 @@ impl std::fmt::Display for Map {
         let latest_row = self.0.len() - 1;
         for (i, row) in self.0.iter().enumerate() {
             for element in row.iter() {
-                f.write_char(element.as_char());
+                let _ = f.write_char(element.as_char());
             }
             if i != latest_row {
-                f.write_str("\n");
+                let _ = f.write_str("\n");
             }
         }
 
@@ -58,6 +59,7 @@ pub struct GuardElement {
     pub direction: Direction,
 }
 
+#[allow(unused)]
 #[derive(Debug)]
 pub struct GuardElementParseError(pub String);
 impl FromStr for GuardElement {
@@ -106,6 +108,7 @@ impl std::fmt::Display for Element {
     }
 }
 
+#[allow(unused)]
 #[derive(Debug)]
 pub struct ParseElementError(String);
 
