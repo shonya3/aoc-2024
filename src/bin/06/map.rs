@@ -2,7 +2,7 @@ use std::{fmt::Write, str::FromStr};
 
 use crate::guard::Direction;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Map(pub Vec<Vec<Element>>);
 
 #[allow(unused)]
