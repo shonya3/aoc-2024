@@ -1,4 +1,4 @@
-use crate::operation::Operation;
+use crate::part2::operation::Operation;
 use std::{num::ParseIntError, str::FromStr};
 
 pub fn parse_equations(input: &str) -> Result<Vec<Equation>, ParseEquationError> {
@@ -13,7 +13,7 @@ pub struct Equation {
 
 impl Equation {
     pub fn is_possible(&self) -> bool {
-        crate::operation::generate_combinations(self.values.len() - 1)
+        crate::part2::operation::generate_combinations(self.values.len() - 1)
             .iter()
             .any(|operations| self.test_value == self.eval(operations))
     }
@@ -31,6 +31,9 @@ impl Equation {
             match op {
                 Operation::Add => result += next_number,
                 Operation::Mul => result *= next_number,
+                Operation::Concat => {
+                    result = format!("{result}{next_number}").parse().unwrap();
+                }
             }
         }
 
@@ -72,7 +75,7 @@ impl FromStr for Equation {
 
 #[cfg(test)]
 mod tests {
-    use crate::equation::Equation;
+    use super::Equation;
 
     #[test]
     fn is_possible() {
@@ -81,10 +84,10 @@ mod tests {
         assert!(p("190: 10 19").is_possible());
         assert!(p("3267: 81 40 27").is_possible());
         assert!(!p("83: 17 5").is_possible());
-        assert!(!p("156: 15 6").is_possible());
-        assert!(!p("7290: 6 8 6 15").is_possible());
+        assert!(p("156: 15 6").is_possible());
+        assert!(p("7290: 6 8 6 15").is_possible());
         assert!(!p("161011: 16 10 13").is_possible());
-        assert!(!p("192: 17 8 14").is_possible());
+        assert!(p("192: 17 8 14").is_possible());
         assert!(p("292: 11 6 16 20").is_possible());
     }
 
