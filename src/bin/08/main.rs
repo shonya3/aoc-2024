@@ -177,8 +177,6 @@ fn part2(input: &str) -> usize {
         });
     });
 
-    println!("{map}");
-
     set.len()
 }
 
