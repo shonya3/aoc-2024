@@ -14,6 +14,7 @@ fn main() {
     println!("Day 10");
 
     println!("Part 1: {}", part1(&input));
+    println!("Part 2: {}", part2(&input));
 }
 
 pub fn part1(input: &str) -> usize {
@@ -48,6 +49,37 @@ pub fn part1(input: &str) -> usize {
         .sum()
 }
 
+pub fn part2(input: &str) -> usize {
+    let map: Map = input.parse().unwrap();
+    let heads: Vec<Position> = map
+        .0
+        .iter()
+        .enumerate()
+        .flat_map(|(i, row)| row.iter().enumerate().map(move |(j, digit)| (i, j, digit)))
+        .filter(|(_, _, digit)| **digit == 0)
+        .map(|(i, j, _)| Position { i, j })
+        .collect();
+
+    heads
+        .into_iter()
+        .map(|position| {
+            let walker = Walker {
+                position,
+                map: &map,
+                path: Path {
+                    start: position,
+                    directions: vec![],
+                },
+                status: PathStatus::Target(1),
+            };
+
+            let mut successful_walkers: Vec<Walker> = Vec::new();
+            explore(walker, 9, &mut successful_walkers);
+            successful_walkers.len()
+        })
+        .sum()
+}
+
 fn explore<'map>(walker: Walker<'map>, depth: usize, successful_walkers: &mut Vec<Walker<'map>>) {
     if depth == 0 {
         successful_walkers.push(walker.clone());
@@ -76,5 +108,10 @@ mod tests {
     #[test]
     fn part1() {
         assert_eq!(36, super::part1(EXAMPLE));
+    }
+
+    #[test]
+    fn part2() {
+        assert_eq!(81, super::part2(EXAMPLE));
     }
 }
