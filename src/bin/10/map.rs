@@ -49,6 +49,3 @@ impl std::fmt::Display for Map {
         Ok(())
     }
 }
-
-#[cfg(test)]
-mod tests {}

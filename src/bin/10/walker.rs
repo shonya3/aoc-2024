@@ -8,7 +8,7 @@ pub struct Walker<'map> {
     pub status: PathStatus,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum PathStatus {
     Done,
     Target(u8),
@@ -20,6 +20,7 @@ pub struct Path {
     pub directions: Vec<Direction>,
 }
 
+#[allow(unused)]
 #[derive(Debug, Clone, Copy)]
 pub enum WalkError {
     AlreadyDone,
