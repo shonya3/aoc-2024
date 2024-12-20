@@ -16,17 +16,12 @@ fn main() {
 
 pub fn part1(input: &str) -> usize {
     let map: Map = input.parse().unwrap();
-    let heads: Vec<Position> = map
-        .0
+    map.0
         .iter()
         .enumerate()
         .flat_map(|(i, row)| row.iter().enumerate().map(move |(j, digit)| (i, j, digit)))
         .filter(|(_, _, digit)| **digit == 0)
         .map(|(i, j, _)| Position { i, j })
-        .collect();
-
-    heads
-        .into_iter()
         .map(|position| {
             let walker = Walker {
                 position,
@@ -47,17 +42,12 @@ pub fn part1(input: &str) -> usize {
 
 pub fn part2(input: &str) -> usize {
     let map: Map = input.parse().unwrap();
-    let heads: Vec<Position> = map
-        .0
+    map.0
         .iter()
         .enumerate()
         .flat_map(|(i, row)| row.iter().enumerate().map(move |(j, digit)| (i, j, digit)))
         .filter(|(_, _, digit)| **digit == 0)
         .map(|(i, j, _)| Position { i, j })
-        .collect();
-
-    heads
-        .into_iter()
         .map(|position| {
             let walker = Walker {
                 position,
