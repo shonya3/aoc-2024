@@ -1,21 +1,82 @@
-use std::num::ParseIntError;
+use std::{collections::HashMap, num::ParseIntError};
 
 fn main() {
     let input = "4 4841539 66 5279 49207 134 609568 0";
 
-    println!("Day 11");
-
-    println!("Part 1: {}", part1(input));
+    println!("Part 1: {}", part1(input, 25));
+    println!("Part 2: {}", part2(input, 75));
 }
 
-pub fn part1(input: &str) -> usize {
+pub fn part1(input: &str, blinks: usize) -> usize {
     let mut stones = parse_input(input).unwrap();
 
-    for _ in 0..25 {
+    for _ in 0..blinks {
         stones = split_stones(&stones)
     }
 
     stones.len()
+}
+
+pub fn part2(input: &str, blinks: usize) -> usize {
+    let mut occurences = Occurences::from_input(input).unwrap();
+
+    for _ in 0..blinks {
+        occurences = part2_split_stones(occurences);
+    }
+
+    occurences.0.values().sum()
+}
+
+pub fn part2_split_stones(occurences: Occurences) -> Occurences {
+    let mut out = occurences.clone();
+
+    occurences
+        .0
+        .into_iter()
+        .filter(|(_, count)| *count > 0)
+        .for_each(|(stone, count)| {
+            *out.0.entry(stone).or_default() -= count;
+
+            split_stone(stone)
+                .into_iter()
+                .for_each(|stone| *out.0.entry(stone).or_default() += count);
+        });
+
+    out
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Occurences(pub HashMap<Stone, usize>);
+impl Occurences {
+    pub fn from_input(input: &str) -> Result<Occurences, ParseU64Error> {
+        let stones = parse_input(input)?;
+        Ok(Occurences::from_slice(&stones))
+    }
+
+    pub fn from_slice(stones: &[Stone]) -> Occurences {
+        let mut map: HashMap<Stone, usize> = HashMap::new();
+        stones
+            .iter()
+            .for_each(|stone| *map.entry(*stone).or_default() += 1);
+
+        Occurences(map)
+    }
+
+    pub fn remove_empty(self) -> Occurences {
+        Occurences(self.0.into_iter().filter(|(_, n)| *n > 0).collect())
+    }
+}
+
+impl std::fmt::Display for Occurences {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut entries = self.0.clone().into_iter().collect::<Vec<(Stone, usize)>>();
+        entries.sort_by(|a, b| a.0 .0.cmp(&b.0 .0));
+        for (stone, n) in entries {
+            writeln!(f, "{} => {}", stone.0, n)?;
+        }
+
+        Ok(())
+    }
 }
 
 fn parse_input(input: &str) -> Result<Vec<Stone>, ParseU64Error> {
@@ -80,6 +141,7 @@ pub fn split_on_two(value: u64) -> Result<Option<(u64, u64)>, ParseU64Error> {
 
 #[cfg(test)]
 mod tests {
+
     use crate::{split_stones, Stone};
 
     #[test]
@@ -154,5 +216,11 @@ mod tests {
 
         let stones_6 = split_stones(&stones_5);
         assert_eq!(22, split_stones(&stones_6).len())
+    }
+
+    #[test]
+    fn part2_stones_equals_part1() {
+        let input = "4 4841539 66 5279 49207 134 609568 0";
+        assert_eq!(super::part1(input, 25), super::part2(input, 25));
     }
 }
