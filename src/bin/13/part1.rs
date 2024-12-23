@@ -30,8 +30,6 @@ impl Group {
                 b_count -= 1;
 
                 loop {
-                    //
-
                     if sum_equals_prize(a, b, prize, a_count, b_count) {
                         return Some(a_count * a.token_cost() + b_count * b.token_cost());
                     }
@@ -50,8 +48,6 @@ impl Group {
         };
 
         let get_a_solution = || {
-            // let div_x = prize.x / a.x
-
             let div_x = prize.x.0.div_ceil(a.x.0);
             let div_y = prize.y.0.div_ceil(a.y.0);
             let mut b_count: usize = 0;
