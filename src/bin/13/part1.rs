@@ -30,11 +30,11 @@ impl Group {
                 b_count -= 1;
 
                 loop {
-                    if sum_equals_prize(a, b, prize, a_count, b_count) {
+                    let sum = sum(a, b, a_count, b_count);
+                    if sum.0 == prize.x && sum.1 == prize.y {
                         return Some(a_count * a.token_cost() + b_count * b.token_cost());
                     }
 
-                    let sum = sum(a, b, a_count, b_count);
                     if sum.0 > prize.x || sum.1 > prize.y {
                         break;
                     }
