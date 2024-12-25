@@ -11,11 +11,11 @@ fn main() {
 
     println!("Day 14");
 
-    part1(&input);
+    println!("Part 1: {}", part1(&input));
 }
 
-fn part1(input: &str) {
-    let mut grid = Grid::from_input(
+fn part1(input: &str) -> u32 {
+    let mut grid = Grid::from_robots_input(
         input,
         Size {
             width: 101,
@@ -24,4 +24,5 @@ fn part1(input: &str) {
     );
 
     grid.wait_secs(100);
+    grid.product_of_quadrants_robots_counts().unwrap()
 }
