@@ -178,12 +178,9 @@ impl Quadrant<'_> {
 
                 true
             })
-            .map(|(x, y, element)| match element {
+            .map(|(_, _, element)| match element {
                 Element::Empty => 0,
-                Element::Robots(n) => {
-                    println!("x {x} y {y}");
-                    *n
-                }
+                Element::Robots(n) => *n,
             })
             .sum()
     }
