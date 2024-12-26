@@ -1,7 +1,7 @@
 use crate::position::Position;
 use std::{fmt::Write, str::FromStr};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Map(pub Vec<Vec<Element>>);
 
 impl Map {
@@ -10,6 +10,29 @@ impl Map {
             .get(position.y)
             .and_then(|row| row.get(position.x))
             .copied()
+    }
+
+    pub fn find_robot_position(&self) -> Option<Position> {
+        self.0
+            .iter()
+            .enumerate()
+            .flat_map(|(y, row)| row.iter().enumerate().map(move |(x, el)| (x, y, el)))
+            .find_map(|(x, y, el)| matches!(el, Element::Robot).then_some(Position { x, y }))
+    }
+}
+
+impl std::fmt::Display for Map {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_char('\n')?;
+        for row in self.0.iter() {
+            for el in row.iter() {
+                write!(f, "{el}")?;
+            }
+
+            f.write_char('\n')?;
+        }
+
+        Ok(())
     }
 }
 
