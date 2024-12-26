@@ -19,6 +19,19 @@ impl Map {
             .flat_map(|(y, row)| row.iter().enumerate().map(move |(x, el)| (x, y, el)))
             .find_map(|(x, y, el)| matches!(el, Element::Robot).then_some(Position { x, y }))
     }
+
+    pub fn boxes_gps(&self) -> usize {
+        self.0
+            .iter()
+            .enumerate()
+            .flat_map(|(y, row)| {
+                row.iter().enumerate().filter_map(move |(x, el)| {
+                    matches!(el, Element::Box).then_some(Position { x, y })
+                })
+            })
+            .map(|position| 100 * position.y + position.x)
+            .sum()
+    }
 }
 
 impl std::fmt::Display for Map {

@@ -51,7 +51,6 @@ impl Robot<'_> {
                 self.map.0[next_position.y][next_position.x] = Element::Robot;
                 self.position = next_position;
                 self.map.0[position_before.y][position_before.x] = Element::Empty;
-                println!("{}", self.map);
             }
             crate::map::Element::Wall => {}
             crate::map::Element::Box => {

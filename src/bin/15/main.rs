@@ -11,11 +11,10 @@ fn main() {
     let input = std::fs::read_to_string("./files/15.txt").unwrap();
 
     println!("Day 15");
-
-    part1(&input);
+    println!("Part 1: {}", part1(&input));
 }
 
-fn part1(input: &str) {
+fn part1(input: &str) -> usize {
     let Input {
         mut map,
         directions,
@@ -27,17 +26,11 @@ fn part1(input: &str) {
         steps_made: 0,
     };
 
-    println!("Initial map: {}", robot.map);
-
     for direction in directions {
-        println!("\n\nStep {} Move {direction:#?}", robot.steps_made + 1);
-        if let Err(err) = robot.step(direction) {
-            println!("{err:#?}");
-            break;
-        }
-
-        println!("{}", robot.map);
+        robot.step(direction).unwrap();
     }
+
+    robot.map.boxes_gps()
 }
 
 #[cfg(test)]
@@ -46,6 +39,6 @@ mod tests {
 
     #[test]
     fn p1() {
-        part1(INPUT_EXAMPLE);
+        assert_eq!(10092, part1(INPUT_EXAMPLE));
     }
 }
