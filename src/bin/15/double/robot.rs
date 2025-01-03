@@ -1,4 +1,4 @@
-use super::map::{BoxEl, Element, Map};
+use super::map::{Element, Map};
 use crate::{
     direction::{self, Direction},
     position::Position,
@@ -138,12 +138,6 @@ pub struct StepError {
     pub kind: StepErrorKind,
 }
 
-/**
- * "#..[][][]@"
- * "#.[.][][]@"
- * "#.[][][]@."
- *
- */
 #[cfg(test)]
 mod tests {
     use super::Robot;
