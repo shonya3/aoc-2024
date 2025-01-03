@@ -40,7 +40,7 @@ impl std::fmt::Debug for StepError {
 
 impl Robot<'_> {
     pub fn step(&mut self, direction: Direction) -> Result<(), StepError> {
-        let position_before = self.position;
+        let robot_position_before = self.position;
         let next_position = direction::next_position(self.position, direction).unwrap();
         let el = self.map.get(next_position).unwrap();
         match el {
@@ -50,7 +50,7 @@ impl Robot<'_> {
                 // );
                 self.map.0[next_position.y][next_position.x] = Element::Robot;
                 self.position = next_position;
-                self.map.0[position_before.y][position_before.x] = Element::Empty;
+                self.map.0[robot_position_before.y][robot_position_before.x] = Element::Empty;
             }
             crate::map::Element::Wall => {}
             crate::map::Element::Box => {
@@ -71,7 +71,8 @@ impl Robot<'_> {
                             self.map.0[position.y][position.x] = Element::Box;
                             self.map.0[next_position.y][next_position.x] = Element::Robot;
                             self.position = next_position;
-                            self.map.0[position_before.y][position_before.x] = Element::Empty;
+                            self.map.0[robot_position_before.y][robot_position_before.x] =
+                                Element::Empty;
                             break;
                         }
                         Element::Wall => break,
@@ -94,5 +95,31 @@ impl Robot<'_> {
         self.steps_made += 1;
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{direction::Direction, map::Map};
+
+    use super::Robot;
+
+    #[test]
+    fn push_boxes() {
+        let mut map: Map = "#...OO@".parse().unwrap();
+        let mut robot = Robot {
+            position: map.find_robot_position().unwrap(),
+            map: &mut map,
+            steps_made: 0,
+        };
+
+        robot.step(Direction::Left).unwrap();
+        assert_eq!("#..OO@.", robot.map.to_string().as_str());
+        robot.step(Direction::Left).unwrap();
+        assert_eq!("#.OO@..", robot.map.to_string().as_str());
+        robot.step(Direction::Left).unwrap();
+        assert_eq!("#OO@...", robot.map.to_string().as_str());
+        robot.step(Direction::Left).unwrap();
+        assert_eq!("#OO@...", robot.map.to_string().as_str());
     }
 }

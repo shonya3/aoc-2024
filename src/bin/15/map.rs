@@ -36,13 +36,15 @@ impl Map {
 
 impl std::fmt::Display for Map {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_char('\n')?;
-        for row in self.0.iter() {
+        let last_row_i = self.0.iter().len() - 1;
+        for (i, row) in self.0.iter().enumerate() {
             for el in row.iter() {
                 write!(f, "{el}")?;
             }
 
-            f.write_char('\n')?;
+            if i != last_row_i {
+                f.write_char('\n')?
+            };
         }
 
         Ok(())
