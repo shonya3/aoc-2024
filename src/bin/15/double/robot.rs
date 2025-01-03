@@ -103,163 +103,163 @@ impl Robot<'_> {
                             Element::Robot => panic!("Never happens"),
                         }
                     }
-                }
+                } else {
+                    let position = next_position;
 
-                let position = next_position;
-
-                let box_part_position = BoxPartPosition {
-                    part: box_part,
-                    position,
-                    level: 0,
-                };
-
-                let another_box_part_position = match box_part {
-                    super::map::BoxEl::Opening => BoxPartPosition {
-                        part: BoxEl::Closing,
-                        position: Position {
-                            x: position.x + 1,
-                            y: position.y,
-                        },
+                    let box_part_position = BoxPartPosition {
+                        part: box_part,
+                        position,
                         level: 0,
-                    },
-                    super::map::BoxEl::Closing => BoxPartPosition {
-                        part: BoxEl::Opening,
-                        position: Position {
-                            x: position.x - 1,
-                            y: position.y,
-                        },
-                        level: 0,
-                    },
-                };
-
-                let mut visited: HashSet<BoxPartPosition> = HashSet::new();
-                let mut queue: VecDeque<BoxPartPosition> =
-                    VecDeque::from(vec![box_part_position, another_box_part_position]);
-
-                while !queue.is_empty() {
-                    let box_el = queue.pop_front().unwrap();
-                    let next_level = box_el.level + 1;
-                    if visited.contains(&box_el) {
-                        continue;
-                    }
-                    visited.insert(box_el);
-
-                    let position =
-                        direction::next_position(box_el.position, direction).ok_or(StepError {
-                            map: self.map.to_owned(),
-                            steps_made: self.steps_made,
-                            kind: StepErrorKind::CouldNotComputeNextPosition {
-                                robot_position_before: next_position,
-                                direction,
-                            },
-                        })?;
-
-                    let Some(next_el) = self.map.get(position) else {
-                        continue;
                     };
 
-                    match next_el {
-                        Element::Empty => {}
-                        Element::Wall => {}
-                        Element::Box(next_box_part) => {
-                            let next_y = match direction {
-                                Direction::Up => box_el.position.y.checked_sub(1),
-                                Direction::Down => Some(box_el.position.y + 1),
-                                _ => panic!("Left or Right never occur here"),
-                            };
-                            let Some(next_y) = next_y else {
-                                continue;
-                            };
-                            let x = box_el.position.x;
+                    let another_box_part_position = match box_part {
+                        super::map::BoxEl::Opening => BoxPartPosition {
+                            part: BoxEl::Closing,
+                            position: Position {
+                                x: position.x + 1,
+                                y: position.y,
+                            },
+                            level: 0,
+                        },
+                        super::map::BoxEl::Closing => BoxPartPosition {
+                            part: BoxEl::Opening,
+                            position: Position {
+                                x: position.x - 1,
+                                y: position.y,
+                            },
+                            level: 0,
+                        },
+                    };
 
-                            if box_el.part == next_box_part {
-                                queue.push_back(BoxPartPosition {
-                                    part: next_box_part,
-                                    position: Position {
-                                        x: box_el.position.x,
-                                        y: next_y,
-                                    },
-                                    level: next_level,
-                                });
-                            } else {
-                                match box_el.part {
-                                    BoxEl::Opening => {
-                                        let opening = BoxPartPosition {
-                                            part: BoxEl::Opening,
-                                            position: Position {
-                                                x: x - 1,
-                                                y: next_y,
-                                            },
-                                            level: next_level,
-                                        };
-                                        let closing = BoxPartPosition {
-                                            part: BoxEl::Closing,
-                                            position: Position { x, y: next_y },
-                                            level: next_level,
-                                        };
-                                        queue.push_back(opening);
-                                        queue.push_back(closing);
-                                    }
-                                    BoxEl::Closing => {
-                                        let opening = BoxPartPosition {
-                                            part: BoxEl::Opening,
-                                            position: Position { x, y: next_y },
-                                            level: next_level,
-                                        };
-                                        let closing = BoxPartPosition {
-                                            part: BoxEl::Closing,
-                                            position: Position {
-                                                x: x + 1,
-                                                y: next_y,
-                                            },
-                                            level: next_level,
-                                        };
-                                        queue.push_back(opening);
-                                        queue.push_back(closing);
+                    let mut visited: HashSet<BoxPartPosition> = HashSet::new();
+                    let mut queue: VecDeque<BoxPartPosition> =
+                        VecDeque::from(vec![box_part_position, another_box_part_position]);
+
+                    while !queue.is_empty() {
+                        let box_el = queue.pop_front().unwrap();
+                        let next_level = box_el.level + 1;
+                        if visited.contains(&box_el) {
+                            continue;
+                        }
+                        visited.insert(box_el);
+
+                        let position = direction::next_position(box_el.position, direction).ok_or(
+                            StepError {
+                                map: self.map.to_owned(),
+                                steps_made: self.steps_made,
+                                kind: StepErrorKind::CouldNotComputeNextPosition {
+                                    robot_position_before: next_position,
+                                    direction,
+                                },
+                            },
+                        )?;
+
+                        let Some(next_el) = self.map.get(position) else {
+                            continue;
+                        };
+
+                        match next_el {
+                            Element::Empty => {}
+                            Element::Wall => {}
+                            Element::Box(next_box_part) => {
+                                let next_y = match direction {
+                                    Direction::Up => box_el.position.y.checked_sub(1),
+                                    Direction::Down => Some(box_el.position.y + 1),
+                                    _ => panic!("Left or Right never occur here"),
+                                };
+                                let Some(next_y) = next_y else {
+                                    continue;
+                                };
+                                let x = box_el.position.x;
+
+                                if box_el.part == next_box_part {
+                                    queue.push_back(BoxPartPosition {
+                                        part: next_box_part,
+                                        position: Position {
+                                            x: box_el.position.x,
+                                            y: next_y,
+                                        },
+                                        level: next_level,
+                                    });
+                                } else {
+                                    match box_el.part {
+                                        BoxEl::Opening => {
+                                            let opening = BoxPartPosition {
+                                                part: BoxEl::Opening,
+                                                position: Position {
+                                                    x: x - 1,
+                                                    y: next_y,
+                                                },
+                                                level: next_level,
+                                            };
+                                            let closing = BoxPartPosition {
+                                                part: BoxEl::Closing,
+                                                position: Position { x, y: next_y },
+                                                level: next_level,
+                                            };
+                                            queue.push_back(opening);
+                                            queue.push_back(closing);
+                                        }
+                                        BoxEl::Closing => {
+                                            let opening = BoxPartPosition {
+                                                part: BoxEl::Opening,
+                                                position: Position { x, y: next_y },
+                                                level: next_level,
+                                            };
+                                            let closing = BoxPartPosition {
+                                                part: BoxEl::Closing,
+                                                position: Position {
+                                                    x: x + 1,
+                                                    y: next_y,
+                                                },
+                                                level: next_level,
+                                            };
+                                            queue.push_back(opening);
+                                            queue.push_back(closing);
+                                        }
                                     }
                                 }
                             }
+                            Element::Robot => panic!("Never happens"),
                         }
-                        Element::Robot => panic!("Never happens"),
+                    }
+
+                    let mut visited: Vec<BoxPartPosition> = Vec::from_iter(visited);
+                    visited.sort_by(|a, b| b.level.cmp(&a.level));
+                    let max_level = visited[0].level;
+
+                    let can_move = visited.iter().filter(|el| el.level == max_level).all(
+                        |BoxPartPosition { position, .. }| {
+                            direction::next_position(*position, direction)
+                                .and_then(|next_position| {
+                                    self.map.get(next_position).and_then(|el| match el {
+                                        Element::Empty => Some(true),
+                                        Element::Wall => None,
+                                        Element::Box(_) => Some(true),
+                                        Element::Robot => panic!("Never ever happens"),
+                                    })
+                                })
+                                .is_some()
+                        },
+                    );
+
+                    if can_move {
+                        visited
+                            .iter()
+                            .for_each(|BoxPartPosition { part, position, .. }| {
+                                let Position { x, y } =
+                                    direction::next_position(*position, direction).unwrap();
+                                self.map.0[y][x] = Element::Box(*part);
+                                self.map.0[position.y][position.x] = Element::Empty;
+                            });
+                        let next_robot_position =
+                            direction::next_position(self.position, direction).unwrap();
+                        self.position = next_robot_position;
+                        self.map.0[robot_position_before.y][robot_position_before.x] =
+                            Element::Empty;
+                        self.map.0[self.position.y][self.position.x] = Element::Robot;
                     }
                 }
-
-                let mut visited: Vec<BoxPartPosition> = Vec::from_iter(visited);
-                visited.sort_by(|a, b| b.level.cmp(&a.level));
-                let max_level = visited[0].level;
-
-                let can_move = visited.iter().filter(|el| el.level == max_level).all(
-                    |BoxPartPosition { position, .. }| {
-                        direction::next_position(*position, direction)
-                            .and_then(|next_position| {
-                                self.map.get(next_position).and_then(|el| match el {
-                                    Element::Empty => Some(true),
-                                    Element::Wall => None,
-                                    Element::Box(_) => Some(true),
-                                    Element::Robot => panic!("Never ever happens"),
-                                })
-                            })
-                            .is_some()
-                    },
-                );
-
-                if can_move {
-                    visited
-                        .iter()
-                        .for_each(|BoxPartPosition { part, position, .. }| {
-                            let Position { x, y } =
-                                direction::next_position(*position, direction).unwrap();
-                            self.map.0[y][x] = Element::Box(*part);
-                            self.map.0[position.y][position.x] = Element::Empty;
-                        });
-                    let next_robot_position =
-                        direction::next_position(self.position, direction).unwrap();
-                    self.position = next_robot_position;
-                    self.map.0[robot_position_before.y][robot_position_before.x] = Element::Empty;
-                    self.map.0[self.position.y][self.position.x] = Element::Robot;
-                }
-
-                println!("Can move: {can_move}");
             }
             Element::Robot => {
                 return Err(StepError {
