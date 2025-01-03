@@ -226,22 +226,19 @@ impl Robot<'_> {
 
                     let mut visited: Vec<BoxPartPosition> = Vec::from_iter(visited);
                     visited.sort_by(|a, b| b.level.cmp(&a.level));
-                    let max_level = visited[0].level;
 
-                    let can_move = visited.iter().filter(|el| el.level == max_level).all(
-                        |BoxPartPosition { position, .. }| {
-                            direction::next_position(*position, direction)
-                                .and_then(|next_position| {
-                                    self.map.get(next_position).and_then(|el| match el {
-                                        Element::Empty => Some(true),
-                                        Element::Wall => None,
-                                        Element::Box(_) => Some(true),
-                                        Element::Robot => panic!("Never ever happens"),
-                                    })
+                    let can_move = visited.iter().all(|BoxPartPosition { position, .. }| {
+                        direction::next_position(*position, direction)
+                            .and_then(|next_position| {
+                                self.map.get(next_position).and_then(|el| match el {
+                                    Element::Empty => Some(true),
+                                    Element::Wall => None,
+                                    Element::Box(_) => Some(true),
+                                    Element::Robot => panic!("Never ever happens"),
                                 })
-                                .is_some()
-                        },
-                    );
+                            })
+                            .is_some()
+                    });
 
                     if can_move {
                         visited
