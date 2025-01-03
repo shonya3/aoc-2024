@@ -102,7 +102,7 @@ pub enum Element {
     Robot,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum BoxEl {
     Opening,
     Closing,
