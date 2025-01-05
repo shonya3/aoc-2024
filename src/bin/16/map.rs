@@ -1,6 +1,22 @@
 use crate::position::Position;
 use std::{fmt::Write, str::FromStr};
 
+pub const MAP_EXAMPLE: &str = "###############
+#.......#....E#
+#.#.###.#.###.#
+#.....#.#...#.#
+#.###.#####.#.#
+#.#.#.......#.#
+#.#.#####.###.#
+#...........#.#
+###.#.#####.#.#
+#...#.....#.#.#
+#.#.#.###.#.#.#
+#.....#...#.#.#
+#.###.#.#.#.#.#
+#S..#.....#...#
+###############";
+
 #[derive(Debug, Clone)]
 pub struct Map(pub Vec<Vec<Element>>);
 
@@ -10,6 +26,14 @@ impl Map {
             .get(position.y)
             .and_then(|row| row.get(position.x))
             .copied()
+    }
+
+    pub fn find_start_position(&self) -> Option<Position> {
+        self.0
+            .iter()
+            .enumerate()
+            .flat_map(|(y, row)| row.iter().enumerate().map(move |(x, el)| (x, y, el)))
+            .find_map(|(x, y, el)| matches!(el, Element::Start).then_some(Position { x, y }))
     }
 }
 
@@ -90,29 +114,12 @@ impl FromStr for Element {
 
 #[cfg(test)]
 mod tests {
-    use crate::map::Element;
-
     use super::Map;
-
-    const EXAMPLE: &str = "###############
-#.......#....E#
-#.#.###.#.###.#
-#.....#.#...#.#
-#.###.#####.#.#
-#.#.#.......#.#
-#.#.#####.###.#
-#...........#.#
-###.#.#####.#.#
-#...#.....#.#.#
-#.#.#.###.#.#.#
-#.....#...#.#.#
-#.###.#.#.#.#.#
-#S..#.....#...#
-###############";
+    use crate::map::MAP_EXAMPLE;
 
     #[test]
     fn parse() {
-        let map: Map = EXAMPLE.parse().unwrap();
+        let map: Map = MAP_EXAMPLE.parse().unwrap();
         println!("{map}");
     }
 }
