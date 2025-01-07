@@ -133,6 +133,7 @@ mod solution_map {
                     }
                     Move::Rotate90Degree(rotation) => {
                         dir = direction::rotate_90deg(dir, *rotation);
+                        map.0[pos.y][pos.x] = SolutionMapElement::Direction(dir);
                     }
                 }
             }
