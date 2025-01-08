@@ -1,6 +1,6 @@
 #![allow(unused)]
 
-use std::collections::{HashMap, VecDeque};
+use std::collections::{HashMap, HashSet, VecDeque};
 
 use solution_map::SolutionMap;
 use tile_map::TileMap;
@@ -65,7 +65,7 @@ pub struct Scored {
 }
 
 impl Solution<'_> {
-    pub fn explore_p2(&self) -> Vec<Solution<'_>> {
+    pub fn explore_part2(&self) -> usize {
         let mut complete: Vec<Solution> = vec![];
         let mut queue: VecDeque<Solution> = VecDeque::from_iter(vec![self.clone()]);
         let mut visited: HashMap<Visited, u32> = HashMap::new();
@@ -75,6 +75,11 @@ impl Solution<'_> {
             if let Some(Element::End) = solution.map.get(solution.position) {
                 complete.push(solution.clone());
                 continue;
+            }
+
+            let pos = Position { x: 3, y: 10 };
+            if solution.position == pos && solution.direction == Direction::Up {
+                println!("HEHREREE {}", solution.score());
             }
 
             if let Some(next_position) =
@@ -93,7 +98,7 @@ impl Solution<'_> {
 
                         if visited
                             .get(&visited_entry)
-                            .map_or(true, |&prev_score| current_score < prev_score)
+                            .map_or(true, |&prev_score| current_score <= prev_score)
                         {
                             visited.insert(visited_entry, current_score);
                             scored
@@ -123,7 +128,7 @@ impl Solution<'_> {
 
                 if visited
                     .get(&visited_entry)
-                    .map_or(true, |&prev_score| current_score < prev_score)
+                    .map_or(true, |&prev_score| current_score <= prev_score)
                 {
                     visited.insert(visited_entry, current_score);
                     scored
@@ -140,55 +145,19 @@ impl Solution<'_> {
         }
 
         complete.sort_by_key(|a| a.score());
-        let first = complete.first().unwrap();
-        let positions_directions =
-            solution_map::SolutionMap::from(first.clone()).steps_positions_directions();
+        let first_min_solution = complete.first().unwrap();
+        let first_min_solution_score = complete.first().unwrap().score();
 
-        scored
+        let positions = complete
+            .clone()
             .into_iter()
-            // .filter(|(scored, solutions)| {
-            //     positions_directions.contains(&(scored.position, scored.direction))
-            // })
-            .for_each(|(scored, solutions)| {
-                if scored.position == (Position { x: 3, y: 9 }) {
-                    println!("HERE {}", solutions.len());
-                };
-            });
-
-        // println!("{}", positions.len());
-        // let tiles_positions = scored
-        //     .into_iter()
-        //     .filter(|(scored, _solutions)| positions.contains(&scored.position))
-        //     .flat_map(|(_, solutions)| {
-        //         solutions
-        //             .into_iter()
-        //             .flat_map(|solution| {
-        //                 // solution_map::SolutionMap::from(solution)
-        //                 //     .steps_positions()
-        //                 //     .into_iter()
-        //                 //     .filter(|position| positions.contains(position));
-
-        //                 // if solution.score() ==
-
-        //                 vec![]
-        //             })
-        //             .collect::<HashSet<_>>()
-        //     })
-        //     .collect::<HashSet<Position>>()
-        //     .into_iter()
-        //     .collect::<Vec<_>>();
-        // println!("{}", tiles_positions.len());
-        // let tile_map = TileMap::new(first.map.clone(), tiles_positions);
-        // println!("{tile_map}");
-        // .chain(vec![first.start].into_iter());
-
-        // 3,9
-        // let solutions = scored.get(&Position { x: 3, y: 9 }).unwrap().clone();
-        // println!("{:#?}", solutions.len());
-
-        // let solution = solutions.iter().map(|s| s.score()).min().unwrap();
-
-        complete
+            .take_while(|solution| solution.score() == first_min_solution_score)
+            .flat_map(|solution| SolutionMap::from(solution).steps_positions())
+            .collect::<HashSet<_>>()
+            .into_iter()
+            .collect::<Vec<_>>();
+        // let tile_map = TileMap::new(first_min_solution.map.clone(), positions.clone());
+        positions.len()
     }
 
     pub fn explore_solutions(&self) -> Vec<Solution> {
@@ -514,7 +483,7 @@ mod tests {
     use super::Solution;
     use crate::{
         direction::Direction,
-        map::{Map, MAP_EXAMPLE},
+        map::{Map, MAP_EXAMPLE, MAP_EXAMPLE2},
         position::Position,
     };
 
@@ -544,7 +513,7 @@ mod tests {
     }
 
     #[test]
-    fn explore_p2() {
+    fn explore_part2() {
         let map: Map = MAP_EXAMPLE.parse().unwrap();
         let start = map.find_start_position().unwrap();
         let solution = Solution {
@@ -554,13 +523,17 @@ mod tests {
             moves: vec![],
             direction: Direction::Right,
         };
-        let complete_solutions = solution.explore_p2();
-        println!(
-            "{:?}",
-            complete_solutions
-                .into_iter()
-                .map(|s| s.score())
-                .collect::<Vec<_>>()
-        )
+        assert_eq!(45, solution.explore_part2());
+
+        let map: Map = MAP_EXAMPLE2.parse().unwrap();
+        let start = map.find_start_position().unwrap();
+        let solution = Solution {
+            position: start,
+            map: &map,
+            start,
+            moves: vec![],
+            direction: Direction::Right,
+        };
+        assert_eq!(64, solution.explore_part2());
     }
 }
