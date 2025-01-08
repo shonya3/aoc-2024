@@ -57,29 +57,16 @@ impl Solution<'_> {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct Scored {
-    score: u32,
-    direction: Direction,
-    position: Position,
-}
-
 impl Solution<'_> {
     pub fn explore_part2(&self) -> usize {
         let mut complete: Vec<Solution> = vec![];
         let mut queue: VecDeque<Solution> = VecDeque::from_iter(vec![self.clone()]);
         let mut visited: HashMap<Visited, u32> = HashMap::new();
-        let mut scored: HashMap<Scored, Vec<Solution>> = HashMap::new();
 
         while let Some(solution) = queue.pop_front() {
             if let Some(Element::End) = solution.map.get(solution.position) {
                 complete.push(solution.clone());
                 continue;
-            }
-
-            let pos = Position { x: 3, y: 10 };
-            if solution.position == pos && solution.direction == Direction::Up {
-                println!("HEHREREE {}", solution.score());
             }
 
             if let Some(next_position) =
@@ -101,14 +88,6 @@ impl Solution<'_> {
                             .map_or(true, |&prev_score| current_score <= prev_score)
                         {
                             visited.insert(visited_entry, current_score);
-                            scored
-                                .entry(Scored {
-                                    direction: new_solution.direction,
-                                    score: current_score,
-                                    position: new_solution.position,
-                                })
-                                .or_default()
-                                .push(new_solution.clone());
                             queue.push_back(new_solution);
                         }
                     }
@@ -131,14 +110,6 @@ impl Solution<'_> {
                     .map_or(true, |&prev_score| current_score <= prev_score)
                 {
                     visited.insert(visited_entry, current_score);
-                    scored
-                        .entry(Scored {
-                            direction: new_solution.direction,
-                            score: current_score,
-                            position: new_solution.position,
-                        })
-                        .or_default()
-                        .push(new_solution.clone());
                     queue.push_back(new_solution);
                 }
             }
@@ -148,15 +119,17 @@ impl Solution<'_> {
         let first_min_solution = complete.first().unwrap();
         let first_min_solution_score = complete.first().unwrap().score();
 
-        let positions = complete
+        let mut positions = complete
             .clone()
             .into_iter()
             .take_while(|solution| solution.score() == first_min_solution_score)
             .flat_map(|solution| SolutionMap::from(solution).steps_positions())
-            .collect::<HashSet<_>>()
-            .into_iter()
-            .collect::<Vec<_>>();
-        // let tile_map = TileMap::new(first_min_solution.map.clone(), positions.clone());
+            .collect::<HashSet<_>>();
+        let tile_map = TileMap::new(
+            first_min_solution.map.clone(),
+            positions.clone().into_iter().collect(),
+        );
+        // println!("{tile_map}");
         positions.len()
     }
 
@@ -225,10 +198,6 @@ impl Solution<'_> {
                 }
             }
         }
-
-        // 3,9
-        let solutions = scored.get(&Position { x: 3, y: 9 }).unwrap().clone();
-        println!("{:#?}", solutions.len());
 
         complete
     }
@@ -390,6 +359,9 @@ mod solution_map {
     impl From<Solution<'_>> for SolutionMap {
         fn from(solution: Solution) -> Self {
             let mut map = SolutionMap::from(solution.map.clone());
+
+            map.0[solution.start.y][solution.start.x] =
+                SolutionMapElement::Direction(Direction::Right);
 
             let mut pos = solution.start;
             let mut dir = Direction::Right;
