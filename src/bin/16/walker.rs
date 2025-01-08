@@ -1,5 +1,3 @@
-#![allow(unused)]
-
 use std::collections::{HashMap, HashSet, VecDeque};
 
 use solution_map::SolutionMap;
@@ -8,7 +6,7 @@ use tile_map::TileMap;
 use crate::{
     direction::{self, Direction, Rotation},
     map::{Element, Map},
-    position::{self, Position},
+    position::Position,
 };
 
 #[derive(Debug, Clone)]
@@ -29,31 +27,6 @@ impl Solution<'_> {
                 Move::Rotate90Degree(_) => 1000,
             })
             .sum()
-    }
-
-    pub fn score_at_position_and_direction(&self, position: Position, direction: Direction) -> u32 {
-        let mut score = 0;
-
-        let mut pos = self.start;
-        let mut dir = Direction::Right;
-        for movee in &self.moves {
-            if pos == position && dir == direction {
-                break;
-            }
-
-            match movee {
-                Move::Step(direction) => {
-                    pos = direction::next_position(pos, *direction).unwrap();
-                    score += 1;
-                }
-                Move::Rotate90Degree(rotation) => {
-                    dir = direction::rotate_90deg(dir, *rotation);
-                    score += 1000;
-                }
-            }
-        }
-
-        score
     }
 }
 
@@ -119,17 +92,20 @@ impl Solution<'_> {
         let first_min_solution = complete.first().unwrap();
         let first_min_solution_score = complete.first().unwrap().score();
 
-        let mut positions = complete
+        let positions = complete
             .clone()
             .into_iter()
             .take_while(|solution| solution.score() == first_min_solution_score)
-            .flat_map(|solution| SolutionMap::from(solution).steps_positions())
+            .flat_map(|solution| SolutionMap::new(&solution).steps_positions())
             .collect::<HashSet<_>>();
-        let tile_map = TileMap::new(
-            first_min_solution.map.clone(),
-            positions.clone().into_iter().collect(),
+
+        println!(
+            "{}",
+            TileMap::new(
+                first_min_solution.map.clone(),
+                positions.clone().into_iter().collect()
+            )
         );
-        // println!("{tile_map}");
         positions.len()
     }
 
@@ -217,7 +193,7 @@ pub enum Move {
 
 impl std::fmt::Display for Solution<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        solution_map::SolutionMap::from(self.clone()).fmt(f)
+        solution_map::SolutionMap::new(self).fmt(f)
     }
 }
 
@@ -232,7 +208,7 @@ mod tile_map {
     pub struct TileMap(pub Vec<Vec<TileMapElement>>);
 
     impl TileMap {
-        pub fn new(mut map: Map, tiles_positions: Vec<Position>) -> TileMap {
+        pub fn new(map: Map, tiles_positions: Vec<Position>) -> TileMap {
             let mut map = TileMap::from(map);
             tiles_positions
                 .into_iter()
@@ -323,22 +299,6 @@ mod solution_map {
     pub struct SolutionMap(pub Vec<Vec<SolutionMapElement>>);
 
     impl SolutionMap {
-        pub fn steps_positions_directions(&self) -> Vec<(Position, Direction)> {
-            self.0
-                .iter()
-                .enumerate()
-                .flat_map(|(y, row)| {
-                    row.iter().enumerate().filter_map(move |(x, el)| {
-                        if let SolutionMapElement::Direction(dir) = el {
-                            return Some((Position { x, y }, *dir));
-                        }
-
-                        None
-                    })
-                })
-                .collect()
-        }
-
         pub fn steps_positions(&self) -> Vec<Position> {
             self.0
                 .iter()
@@ -354,10 +314,8 @@ mod solution_map {
                 })
                 .collect()
         }
-    }
 
-    impl From<Solution<'_>> for SolutionMap {
-        fn from(solution: Solution) -> Self {
+        pub fn new(solution: &Solution) -> SolutionMap {
             let mut map = SolutionMap::from(solution.map.clone());
 
             map.0[solution.start.y][solution.start.x] =
@@ -456,7 +414,6 @@ mod tests {
     use crate::{
         direction::Direction,
         map::{Map, MAP_EXAMPLE, MAP_EXAMPLE2},
-        position::Position,
     };
 
     #[test]
@@ -471,17 +428,9 @@ mod tests {
             direction: Direction::Right,
         };
 
-        let mut complete_solutions = solution.explore_solutions();
-
+        let complete_solutions = solution.explore_solutions();
         let min = complete_solutions.iter().map(|s| s.score()).min().unwrap();
         assert_eq!(7036, min);
-
-        complete_solutions.sort_by_key(|a| a.score());
-        assert_eq!(
-            3006,
-            complete_solutions[0]
-                .score_at_position_and_direction(Position { x: 3, y: 9 }, Direction::Up)
-        )
     }
 
     #[test]
