@@ -7,7 +7,18 @@ Register C: 0
 Program: 0,1,5,4,3,0";
 
 fn main() {
+    let puzzle_input = "Register A: 62769524
+Register B: 0
+Register C: 0
+
+Program: 2,4,1,7,7,5,0,3,4,0,1,7,5,5,3,0";
+
     println!("Day 17");
+
+    println!(
+        "Part 1: {}",
+        puzzle_input.parse::<Computer>().unwrap().run_program()
+    )
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -16,6 +27,66 @@ pub struct Computer {
     pub b: RegisterB,
     pub c: RegisterC,
     pub program: Program,
+}
+
+impl Computer {
+    pub fn operand_value(&self, operand: Operand) -> u32 {
+        match operand.0 {
+            n if (0..=3).contains(&n) => n as u32,
+            4 => self.a.0,
+            5 => self.b.0,
+            6 => self.c.0,
+            7 => 7,
+            _ => panic!("Never happens"),
+        }
+    }
+
+    pub fn run_program(&mut self) -> String {
+        let mut output: Vec<u32> = Vec::new();
+        let mut instruction_pointer = 0;
+
+        let program = self.program.clone();
+
+        while let Some(instruction_pair) = program.0.get(instruction_pointer / 2) {
+            if let Some(out) = self.execute_instruction(&mut instruction_pointer, instruction_pair)
+            {
+                output.push(out);
+            }
+        }
+
+        output
+            .into_iter()
+            .map(|n| n.to_string())
+            .collect::<Vec<String>>()
+            .join(",")
+    }
+
+    pub fn execute_instruction(
+        &mut self,
+        instruction_pointer: &mut usize,
+        (instruction, operand): &(Instruction, Operand),
+    ) -> Option<u32> {
+        let value = self.operand_value(*operand);
+        *instruction_pointer += 2;
+        match instruction {
+            Instruction::Adv => self.a.0 /= 2u32.pow(value),
+            Instruction::Bxl => self.b.0 ^= value,
+            Instruction::Bst => self.b.0 = value % 8,
+            Instruction::Jnz => {
+                if self.a.0 == 0 {
+                    return None;
+                }
+
+                *instruction_pointer = value as usize;
+            }
+            Instruction::Bxc => self.b.0 ^= self.c.0,
+            Instruction::Out => return Some(value % 8),
+            Instruction::Bdv => self.b.0 = self.a.0 / 2u32.pow(value),
+            Instruction::Cdv => self.c.0 = self.a.0 / 2u32.pow(value),
+        }
+
+        None
+    }
 }
 
 #[derive(Debug)]
@@ -118,7 +189,7 @@ impl FromStr for RegisterC {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Operand(pub u8);
 
 #[derive(Debug)]
@@ -237,7 +308,27 @@ mod tests {
 
     #[test]
     fn execute() {
-        let computer: Computer = "Register C: 9\n\nProgram: 2,6".parse().unwrap();
-        println!("{computer:?}");
+        let mut computer: Computer = "Register C: 9\n\nProgram: 2,6".parse().unwrap();
+        computer.run_program();
+        assert_eq!(RegisterB(1), computer.b);
+
+        let mut computer: Computer = "Register A: 10\n\nProgram: 5,0,5,1,5,4".parse().unwrap();
+        assert_eq!("0,1,2".to_owned(), computer.run_program());
+
+        let mut computer: Computer = "Register A: 2024\n\nProgram: 0,1,5,4,3,0".parse().unwrap();
+        assert_eq!("4,2,5,6,7,7,7,7,3,1,0".to_owned(), computer.run_program());
+
+        let mut computer: Computer = "Register B: 29\n\nProgram: 1,7".parse().unwrap();
+        computer.run_program();
+        assert_eq!(RegisterB(26), computer.b);
+
+        let mut computer: Computer = "Register B: 2024\nRegister C: 43690\n\nProgram: 4,0"
+            .parse()
+            .unwrap();
+        computer.run_program();
+        assert_eq!(RegisterB(44354), computer.b);
+
+        let mut computer: Computer = EXAMPLE.parse().unwrap();
+        assert_eq!("4,6,3,5,6,3,5,2,1,0", computer.run_program())
     }
 }
