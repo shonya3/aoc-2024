@@ -29,31 +29,34 @@ impl FromStr for Computer {
     type Err = ParseComputerError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let mut lines = s.lines();
-        let mut take_line = || {
-            lines
-                .next()
-                .ok_or_else(|| ParseComputerError::InvalidInput(s.to_owned()))
-        };
+        let (registers_input, program_input) = s
+            .trim()
+            .split_once("\n\n")
+            .ok_or_else(|| ParseComputerError::InvalidInput(s.to_owned()))?;
 
-        let a_input = take_line()?;
-        let b_input = take_line()?;
-        let c_input = take_line()?;
-        let empty = take_line()?;
-        if !empty.is_empty() {
-            return Err(ParseComputerError::InvalidInput(s.to_owned()));
+        let mut a = RegisterA(0);
+        let mut b = RegisterB(0);
+        let mut c = RegisterC(0);
+
+        for line in registers_input.lines() {
+            if line.contains('A') {
+                a = line
+                    .parse()
+                    .map_err(|err| ParseComputerError::ParseRegister('A', err))?;
+            }
+
+            if line.contains('B') {
+                b = line
+                    .parse()
+                    .map_err(|err| ParseComputerError::ParseRegister('B', err))?;
+            }
+
+            if line.contains('C') {
+                c = line
+                    .parse()
+                    .map_err(|err| ParseComputerError::ParseRegister('C', err))?;
+            }
         }
-        let program_input = take_line()?;
-
-        let a: RegisterA = a_input
-            .parse()
-            .map_err(|err| ParseComputerError::ParseRegister('A', err))?;
-        let b: RegisterB = b_input
-            .parse()
-            .map_err(|err| ParseComputerError::ParseRegister('B', err))?;
-        let c: RegisterC = c_input
-            .parse()
-            .map_err(|err| ParseComputerError::ParseRegister('C', err))?;
 
         let program: Program = program_input
             .parse()
@@ -230,5 +233,11 @@ mod tests {
             },
             computer
         );
+    }
+
+    #[test]
+    fn execute() {
+        let computer: Computer = "Register C: 9\n\nProgram: 2,6".parse().unwrap();
+        println!("{computer:?}");
     }
 }
